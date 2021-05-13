@@ -10,7 +10,7 @@ app = Flask(__name__)
 app.url_map.strict_slashes = False
 mysql = MySQL(cursorclass=DictCursor)
 mail = Mail( app )
-app.secret_key = '!Qwertyuiop123!'
+app.secret_key = 'FinalProject123!'
 
 
 app.config['MYSQL_DATABASE_HOST'] = 'db'
