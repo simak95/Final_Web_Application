@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+{% block content %}
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Team</th>
+            <th scope="col">Position</th>
+            <th scope="col">Height (inches)</th>
+            <th scope="col">Weight (lbs)</th>
+            <th scope="col">Age</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for pname in players %}
+        <tr>
+            <td><a href="view/{{pname.name}}">{{ pname.name }}</a></td>
+            <td>{{ pname.team }}</td>
+            <td>{{ pname.position }}</td>
+            <td>{{ pname.height }}</td>
+            <td>{{ pname.weight }}</td>
+            <td>{{ pname.age }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

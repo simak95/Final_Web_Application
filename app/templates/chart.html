@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<body style=" background-color: floralwhite;color:darkred">
+<br>
+    <div class="container">
+        <h2 style="text-align:center">Players Statistics</h2>
+    <br>
+    <div class="row">
+        <div class="col">
+            <h5 style="text-align:center">Number of Players in Each Team</h5>
+        </div>
+    </div>
+        <div>
+            <p style="text-align:center">This chart displays the total count of players in each Team. The x axis shows the Team Name while the y axis shows the Player Count. Click on the legend to toggle the data on or off!</p>
+        </div>
+    <div class="row">
+        <div class="col">
+            <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+            <canvas id="myChart" width="800" height="400" style="text-align: center;"></canvas>
+            <script style="text-align:center">
+                Chart.defaults.global.responsive = true;
+                const chartData01 = {
+                    labels:[{% for item in player_labels %}
+                    "{{item}}",
+                    {% endfor %}],
+                    datasets : [{
+                        label: '{{ player_legend }}',
+                        data : [{% for item in player_values %}
+                        {{item}},
+                        {% endfor %}],
+                        backgroundColor: 'rgb(255, 99, 132)'
+                    }]
+                }
+                const chart1 = document.getElementById("myChart").getContext("2d");
+                const myChart = new Chart(chart1, {
+                    type: 'line',
+                    data: chartData01,
+                    options: {
+                    scales: {
+                      x: {
+                        type: 'line',
+                        position: 'bottom'
+                      }
+                    }
+                  }
+                });
+            </script>
+        </div>
+    </div>
+</div>
+<br>
+</body>
+{% endblock %}
