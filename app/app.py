@@ -1,51 +1,20 @@
 from typing import List, Dict
 import simplejson as json
-from flask import Flask, request, Response, redirect, session, url_for
+
+from flask import Flask, request, Response, redirect
 from flask import render_template
 from flaskext.mysql import MySQL
 from pymysql.cursors import DictCursor
-from flask_mail import Mail, Message
 
 app = Flask(__name__)
-app.url_map.strict_slashes = False
 mysql = MySQL(cursorclass=DictCursor)
-mail = Mail( app )
-app.secret_key = 'FinalProject123!'
-
 
 app.config['MYSQL_DATABASE_HOST'] = 'db'
 app.config['MYSQL_DATABASE_USER'] = 'root'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'root'
 app.config['MYSQL_DATABASE_PORT'] = 3306
 app.config['MYSQL_DATABASE_DB'] = 'mlbPlayers'
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME']='exampleguest007@gmail.com'
-app.config['MAIL_PASSWORD']='*******'
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USE_SSL'] = True
-mail = Mail( app )
-otp = randint( 000000, 999999 )
 mysql.init_app(app)
-
-
-@app.route( '/login/', methods=['GET', 'POST'] )
-def login():
-    msg = ''
-    if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
-        username = request.form['username']
-        password = request.form['password']
-        cursor = mysql.get_db().cursor()
-        cursor.execute( 'SELECT * FROM members WHERE username = %s AND password = %s', (username, password,) )
-        account = cursor.fetchone()
-        if account:
-            session['signedin'] = True
-            session['id'] = account['id']
-            session['username'] = account['username']
-            return redirect( url_for( 'index' ) )
-        else:
-            msg = 'Incorrect username/password!'
-    return render_template( 'login.html', msg=msg )
 
 
 @app.route('/', methods=['GET'])

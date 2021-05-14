@@ -110,13 +110,3 @@ INSERT INTO basePlayers VALUES
     ('Justin Speier',' "ANA"',' "Relief Pitcher"',76,205,33.31),
     ('Darren Oliver',' "ANA"',' "Relief Pitcher"',74,220,36.4),
     ('Hector Carrasco',' "ANA"',' "Relief Pitcher"',74,220,37.36);
-
-CREATE TABLE IF NOT EXISTS `members` (
-	`id` int(11) NOT NULL AUTO_INCREMENT,
-  	`username` varchar(50) NOT NULL,
-  	`password` varchar(255) NOT NULL,
-  	`email` varchar(100) NOT NULL,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
-
-INSERT INTO `members` (`id`, `username`, `password`, `email`) VALUES (1, 'example', 'guest', 'exampleguest007@gmail.com');
