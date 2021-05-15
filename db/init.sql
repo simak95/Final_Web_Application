@@ -9,6 +9,38 @@ CREATE TABLE IF NOT EXISTS basePlayers (
     `weight` INT,
     `age` NUMERIC(4, 2)
 );
+
+CREATE TABLE IF NOT EXISTS users (
+  id int AUTO_INCREMENT,
+  username VARCHAR(100),
+  useremail VARCHAR(100),
+  userpassword VARCHAR(100),
+  hash VARCHAR(100),
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS errors(
+  errorcode int AUTO_INCREMENT,
+  errorname VARCHAR(100),
+  errormessage VARCHAR(100),
+  errornextpage VARCHAR(100),
+  PRIMARY KEY (errorcode)
+);
+
+INSERT INTO users (username, useremail, userpassword, hash) VALUES
+    ('guestuser1', 'guestuser1@gmail.com', 'password1',''),
+    ('guestuser2', 'guestuser2@gmail.com', 'password2',''),
+    ('guestuser3', 'guestuser3@gmail.com', 'password3','');
+
+
+INSERT INTO errors(errorcode, errorname, errormessage, errornextpage) VALUES
+    ('404', 'USER_NOT_FOUND','User name not found', 'register'),
+    ('405', 'USER_EXISTS','User name already exists.', 'login'),
+    ('406', 'EMAIL_NOT_VERIFIED','Please verify your email.', 'login'),
+    ('407', 'INVALID_LOGIN','Invalid email id/password.', 'login'),
+    ('200', 'USER_CREATED','User created successfully. Please check your email for login instructions.', 'login'),
+    ('201', 'EMAIL_VERIFIED','Email verified successfully. Please proceed to login.', 'login');
+
 INSERT INTO basePlayers VALUES
     ('Adam Donachie',' "BAL"',' "Catcher"',74,180,22.99),
     ('Paul Bako',' "BAL"',' "Catcher"',74,215,34.69),
@@ -111,12 +143,3 @@ INSERT INTO basePlayers VALUES
     ('Darren Oliver',' "ANA"',' "Relief Pitcher"',74,220,36.4),
     ('Hector Carrasco',' "ANA"',' "Relief Pitcher"',74,220,37.36);
 
-CREATE TABLE IF NOT EXISTS `members` (
-	`id` int(11) NOT NULL AUTO_INCREMENT,
-  	`username` varchar(50) NOT NULL,
-  	`password` varchar(255) NOT NULL,
-  	`email` varchar(100) NOT NULL,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
-
-INSERT INTO `members` (`id`, `username`, `password`, `email`) VALUES (1, 'example', 'guest', 'exampleguest007@gmail.com');
