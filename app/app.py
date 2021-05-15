@@ -1,80 +1,117 @@
+
 from typing import List, Dict
 import simplejson as json
-from flask import Flask, request, Response, redirect, session, url_for
+from flask import Flask, request, Response, redirect
 from flask import render_template
 from flaskext.mysql import MySQL
 from pymysql.cursors import DictCursor
-from flask_mail import Mail, Message
+from app import sendemail
+import sys
+from datetime import datetime
+import random
 
 app = Flask(__name__)
-app.url_map.strict_slashes = False
 mysql = MySQL(cursorclass=DictCursor)
-mail = Mail( app )
-app.secret_key = 'FinalProject123!'
-
 
 app.config['MYSQL_DATABASE_HOST'] = 'db'
 app.config['MYSQL_DATABASE_USER'] = 'root'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'root'
 app.config['MYSQL_DATABASE_PORT'] = 3306
 app.config['MYSQL_DATABASE_DB'] = 'mlbPlayers'
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME']='exampleguest007@gmail.com'
-app.config['MAIL_PASSWORD']='*******'
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USE_SSL'] = True
-mail = Mail( app )
-otp = randint( 000000, 999999 )
 mysql.init_app(app)
-
-
-@app.route( '/login/', methods=['GET', 'POST'] )
-def login():
-    msg = ''
-    if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
-        username = request.form['username']
-        password = request.form['password']
-        cursor = mysql.get_db().cursor()
-        cursor.execute( 'SELECT * FROM members WHERE username = %s AND password = %s', (username, password,) )
-        account = cursor.fetchone()
-        if account:
-            session['signedin'] = True
-            session['id'] = account['id']
-            session['username'] = account['username']
-            return redirect( url_for( 'index' ) )
-        else:
-            msg = 'Incorrect username/password!'
-    return render_template( 'login.html', msg=msg )
 
 
 @app.route('/', methods=['GET'])
 def index():
-    user = {'username': 'MLB Players Project'}
+    return render_template('login.html', title='Login Page')
+
+@app.route('/login', methods=['GET'])
+def login():
+    return render_template('login.html', title='Login Page')
+
+@app.route('/signup', methods=['GET'])
+def signup():
+    return render_template('register.html', title='Register Page')
+
+@app.route('/index', methods=['GET'])
+def show_index():
+    user = {'username': 'Yash, Sima and Shahrukh'}
     cursor = mysql.get_db().cursor()
     cursor.execute('SELECT * FROM basePlayers')
     result = cursor.fetchall()
     return render_template('index.html', title='Home', user=user, players=result)
 
-
-@app.route('/stats', methods=['GET'])
-def charts_view():
-    legend = 'Player Count in Each Team'
-    labels = []
+@app.route('/logins/new', methods=['POST'])
+def add_login():
     cursor = mysql.get_db().cursor()
-    cursor.execute(
-        'SELECT team FROM basePlayers GROUP BY team')
-    for temp in cursor.fetchall():
-        labels.append(list(temp.values())[0])
-    values = []
-    cursor.execute('SELECT COUNT(*) FROM basePlayers GROUP BY team')
-    for temp in cursor.fetchall():
-        values.append(list(temp.values())[0])
-    result = cursor.fetchall()
-    return render_template('chart.html', title='Home', player=result, player_labels=labels,
-                           player_legend=legend,
-                           player_values=values)
+    strEmail = str(request.form.get('email'))
 
+    cursor.execute('SELECT * FROM users WHERE useremail=%s', strEmail)
+
+    row_count = cursor.rowcount
+    if row_count == 0:
+        strPassword = request.form.get('pswd')
+        strName = request.form.get('name')
+        print('No rows returned', file=sys.stderr)
+        random.seed(datetime.now())
+        strHash = str(random.randint(123234, 1232315324))
+        inputData = (strName, strEmail, strPassword, strHash)
+        sql_insert_query = """INSERT INTO users (username,useremail,userpassword,hash) 
+                VALUES (%s, %s,%s, %s) """
+        cursor.execute(sql_insert_query, inputData)
+        mysql.get_db().commit()
+        sendemail.sendemail(strEmail, strHash)
+        return render_template('login.html', title='Login Page')
+    else:
+        print('Login already exists', file=sys.stderr)
+        cursor.execute('SELECT * FROM errors where errorname=%s', 'USER_EXISTS')
+        result = cursor.fetchall()
+        return render_template('notify.html', title='Notify', player=result[0])
+
+@app.route('/checklogin', methods=['POST'])
+def form_check_login():
+    strEmail = str(request.form.get('email'))
+    cursor = mysql.get_db().cursor()
+    cursor.execute('SELECT * FROM users WHERE useremail=%s', strEmail)
+    row_count = cursor.rowcount
+    if row_count == 0:
+        print('No rows returned', file=sys.stderr)
+        cursor.execute('SELECT * FROM errors where errorname=%s', 'USER_NOT_FOUND')
+        result = cursor.fetchall()
+        return render_template('notify.html', title='Notify', player=result[0])
+    else:
+        result = cursor.fetchall()
+
+        if result[0]['hash'] != '':
+            print('hash ' + result[0]['hash'], file=sys.stderr)
+            cursor.execute('SELECT * FROM errors where errorname=%s', 'EMAIL_NOT_VERIFIED')
+            result = cursor.fetchall()
+            return render_template('notify.html', title='Notify', player=result[0])
+
+        if str(result[0]['userpassword']) == str(request.form.get('pswd')):
+
+            user = {'username': str(result[0]['username'])}
+            cursor = mysql.get_db().cursor()
+            cursor.execute('SELECT * FROM basePlayers')
+            result = cursor.fetchall()
+            return render_template('index.html', title='Home', user=user, players=result)
+
+        else:
+            print('Invalid Id/PWD', file=sys.stderr)
+            cursor.execute('SELECT * FROM tblErrors where errName=%s', 'INVALID_LOGIN')
+            result = cursor.fetchall()
+            return render_template('notify.html', title='Notify', player=result[0])
+
+@app.route('/validateLogin/<int:intHash>', methods=['GET', 'POST'])
+def validateLogin(intHash):
+        cursor = mysql.get_db().cursor()
+        inputData = str(intHash)
+        sql_update_query = """UPDATE users t SET t.Hash = '' WHERE t.Hash = %s """
+        cursor.execute(sql_update_query, inputData)
+        mysql.get_db().commit()
+        cursor.execute('SELECT * FROM errors where errorname=%s', 'EMAIL_VERIFIED')
+        result = cursor.fetchall()
+        return render_template('notify.html', title='Notify', player=result[0])
 
 @app.route('/view/<string:name>', methods=['GET'])
 def record_view(name):
